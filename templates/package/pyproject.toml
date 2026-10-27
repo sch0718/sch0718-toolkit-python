@@ -1,0 +1,20 @@
+[project]
+name = "sch0718-__DIST__"
+version = "0.1.0"
+description = "__DESCRIPTION__"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
+authors = [{ name = "신춘호", email = "sch0718@naver.com" }]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/sch0718/sch0718-toolkit-python"
+
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sch0718___NAME__"]
