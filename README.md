@@ -1,6 +1,6 @@
 # sch0718-toolkit-python
 
-여러 서비스의 Python 백엔드가 함께 쓰는 패키지 모음입니다. 패키지마다 PyPI에 따로 발행하고, 각 서비스는 정확한 버전을 골라 설치합니다.
+여러 서비스의 Python 백엔드가 함께 쓰는 패키지 모음입니다. PyPI 없이 **GitHub만** 씁니다. 패키지마다 태그로 버전을 내고, 각 서비스는 그 태그를 git 의존성으로 설치합니다. 태그마다 GitHub Release에 wheel·sdist도 붙습니다.
 
 같은 이름 규칙의 다른 저장소:
 
@@ -27,12 +27,12 @@
 
 | 용도 | 도구 | 별 |
 | --- | --- | ---: |
-| 패키지·가상환경·workspace·빌드 실행·발행 | [uv](https://github.com/astral-sh/uv) | 91.2k |
+| 패키지·가상환경·workspace·빌드 실행·git 의존성 설치 | [uv](https://github.com/astral-sh/uv) | 91.2k |
 | 린트·포맷 | [Ruff](https://github.com/astral-sh/ruff) | 50.3k |
 | 타입 검사 | [mypy](https://github.com/python/mypy) (strict) | 20.7k |
 | 시험 | [pytest](https://github.com/pytest-dev/pytest) | 14.6k |
 | 빌드 백엔드 | [Hatchling](https://github.com/pypa/hatch) (PyPA) | 7.2k |
-| PyPI 발행 | [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) (PyPA 공식) | 1.2k |
+| 릴리스 | GitHub Releases + [GitHub CLI](https://github.com/cli/cli) `gh release` | 46.8k |
 
 - 지원 하한은 Python 3.12이고, CI는 3.12와 3.14에서 돕니다.
 - 라이선스는 PEP 639 방식(`license = "PolyForm-Noncommercial-1.0.0"`, `license-files`)으로 메타데이터에 적습니다.
@@ -61,6 +61,19 @@ scripts/verify.sh
 - 배포 이름은 `sch0718-<이름>`, import 이름은 `sch0718_<이름>`(하이픈은 밑줄)입니다. 템플릿은 [`templates/package`](templates/package)에 있습니다.
 - 패키지 폴더에 저장소 LICENSE 사본이 들어갑니다. 배포물(wheel·sdist)에 라이선스를 넣기 위해서입니다.
 
+## 서비스에서 설치하기
+
+GitHub Packages는 Python(PyPI) 레지스트리를 지원하지 않습니다(지원 목록: npm, RubyGems, Maven·Gradle, NuGet, 컨테이너. [Introduction to GitHub Packages](https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages), 2026-10-27 확인). 그래서 **git 의존성**으로 설치합니다. 공개 저장소라 토큰이 필요 없습니다.
+
+```bash
+uv add "sch0718-http-utils @ git+https://github.com/sch0718/sch0718-toolkit-python@http-utils-v0.1.0#subdirectory=packages/http-utils"
+```
+
+- `@<태그>`로 버전을 고정하고, `#subdirectory=`로 저장소 안의 패키지 폴더를 가리킵니다. uv는 lockfile(`uv.lock`)에 그 태그의 커밋 SHA까지 적습니다.
+- pip·`requirements.txt`도 같은 형식입니다: `sch0718-http-utils @ git+https://github.com/sch0718/sch0718-toolkit-python@http-utils-v0.1.0#subdirectory=packages/http-utils`
+- 버전을 올릴 때는 태그 부분만 바꿉니다. 각 태그의 변경 내용은 [Releases](https://github.com/sch0718/sch0718-toolkit-python/releases)에 있습니다.
+- git을 쓸 수 없는 빌드 환경이면 Release에 붙은 wheel URL로 설치할 수 있습니다: `uv add https://github.com/sch0718/sch0718-toolkit-python/releases/download/<태그>/<wheel 파일 이름>`
+
 ## 릴리스
 
 1. 패키지의 `pyproject.toml` `version`을 올리는 PR을 병합합니다. 예: `uv version --package sch0718-http-utils --bump minor`
@@ -70,20 +83,13 @@ scripts/verify.sh
    git tag http-utils-v0.2.0 && git push origin http-utils-v0.2.0
    ```
 
-3. [발행 워크플로](.github/workflows/publish.yml)가 태그 커밋이 main에 있는지, 태그와 `pyproject.toml` 버전이 같은지 확인합니다. 다음으로 검사를 거쳐 그 패키지 하나만 빌드하고, `pypi` 환경 승인 뒤 PyPI **trusted publishing**(OIDC)으로 발행합니다. PyPI 토큰은 저장소에 두지 않습니다.
+3. [릴리스 워크플로](.github/workflows/release.yml)가 다음을 차례로 합니다.
+   - 태그 커밋이 main에 병합된 것인지, 태그와 `pyproject.toml` 버전이 같은지 확인합니다.
+   - 검사를 거쳐 그 패키지 하나만 빌드합니다.
+   - GitHub Release를 만들고 wheel·sdist를 붙입니다.
+   - 서비스와 같은 방법(git 의존성)으로 그 태그를 설치해 import되는지 확인합니다.
 
-이미 발행한 버전은 덮어쓸 수 없습니다. 문제가 있으면 고친 버전을 새로 내고 PyPI에서 그 버전을 yank합니다.
-
-### 패키지별 첫 설정 (저장소 소유자가 직접)
-
-PyPI는 프로젝트가 생기기 전에 "pending publisher"를 등록해 두면 첫 발행 때 프로젝트를 만듭니다. 다만 등록만으로 이름이 예약되지는 않습니다.
-
-1. PyPI 계정과 2FA를 준비합니다.
-2. PyPI 계정 메뉴 → Publishing에서 pending publisher를 추가합니다. 값은 PyPI 프로젝트 이름 `sch0718-<이름>`, 소유자 `sch0718`, 저장소 `sch0718-toolkit-python`, 워크플로 `publish.yml`, 환경 `pypi`입니다.
-3. GitHub 저장소 Settings → Environments에 `pypi` 환경을 만들고 **보호 규칙을 반드시 겁니다.** Required reviewers에 본인을 넣어 발행마다 승인하게 하고, Deployment branches and tags를 태그 `*-v*`로 제한합니다. 저장소 Rulesets로 `*-v*` 태그를 만들 수 있는 사람도 소유자로 제한합니다. 워크플로도 태그 커밋이 main에 병합된 것인지 검사하지만, 환경 승인이 마지막 안전장치입니다. 출처: [PyPI Trusted Publishers 보안 모델](https://docs.pypi.org/trusted-publishers/security-model/)(2026-10-27 확인)
-4. 위 「릴리스」대로 태그를 push합니다.
-
-출처: [Creating a PyPI project with a Trusted Publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/) (2026-10-27 확인)
+서비스가 태그를 직접 가리키므로 **이미 낸 태그는 옮기거나 지우지 않습니다.** 저장소 Rulesets(`release-tags`)가 `*-v*` 태그의 생성·이동·삭제를 저장소 관리자만 하게 막습니다. 문제가 있으면 고친 버전을 새 태그로 냅니다.
 
 ## 라이선스
 
