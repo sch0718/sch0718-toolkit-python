@@ -5,7 +5,7 @@
 set -euo pipefail
 name="${1:?이름을 주세요(예: http-utils)}"
 desc="${2:?한 줄 설명을 주세요}"
-[[ "$name" =~ ^[a-z][a-z0-9-]*$ ]] || { echo "이름은 소문자로 시작하는 소문자·숫자·하이픈이어야 합니다: $name" >&2; exit 1; }
+[[ "$name" =~ ^[a-z][a-z0-9]*(-[a-z0-9]+)*$ ]] || { echo "이름은 소문자로 시작하고 소문자·숫자로 끝나야 하며, 하이픈은 한 개씩만 쓸 수 있습니다: $name" >&2; exit 1; }
 module="${name//-/_}"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dest="$root/packages/$name"

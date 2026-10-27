@@ -39,6 +39,8 @@
 
 ## 개발
 
+uv 0.13 이상이 필요합니다(`pyproject.toml`의 `required-version`). CI도 같은 버전으로 lockfile을 검사합니다.
+
 ```bash
 uv sync --all-packages
 scripts/verify.sh   # 린트·포맷·타입·시험·빌드 (패키지가 없으면 린트·포맷만)
