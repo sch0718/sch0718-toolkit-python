@@ -13,4 +13,7 @@ if (( ${#packages[@]} == 0 )); then
 fi
 uv run mypy packages
 uv run pytest
-uv build --all-packages --out-dir dist
+# 빌드만 확인한다. 발행용 dist/와 섞이지 않게 임시 폴더에 만들고 지운다.
+out="$(mktemp -d)"
+trap 'rm -rf "$out"' EXIT
+uv build --all-packages --out-dir "$out"

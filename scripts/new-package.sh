@@ -10,6 +10,7 @@ module="${name//-/_}"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dest="$root/packages/$name"
 [[ -e "$dest" ]] && { echo "이미 있습니다: $dest" >&2; exit 1; }
+[[ "$desc" == *$'\n'* ]] && { echo "설명은 한 줄이어야 합니다" >&2; exit 1; }
 cp -R "$root/templates/package" "$dest"
 mv "$dest/src/sch0718___NAME__" "$dest/src/sch0718_$module"
 mv "$dest/tests/test___NAME__.py" "$dest/tests/test_$module.py"
@@ -17,10 +18,16 @@ mv "$dest/tests/test___NAME__.py" "$dest/tests/test_$module.py"
 python3 - "$dest" "$name" "$module" "$desc" <<'PY'
 import pathlib, sys
 dest, dist, module, desc = sys.argv[1:]
+import json
+
+# 설명은 파일 종류에 맞게 이스케이프한다. TOML 기본 문자열과 Python 문자열은 JSON 이스케이프와 호환된다.
+quoted = json.dumps(desc, ensure_ascii=False)[1:-1]
+escaped = {".toml": quoted, ".py": quoted, ".md": desc}
 for path in pathlib.Path(dest).rglob("*"):
-    if path.is_file() and path.suffix in {".toml", ".md", ".py"}:
+    if path.is_file() and path.suffix in escaped:
         text = path.read_text(encoding="utf-8")
-        text = text.replace("__DIST__", dist).replace("__NAME__", module).replace("__DESCRIPTION__", desc)
+        text = text.replace("__DIST__", dist).replace("__NAME__", module)
+        text = text.replace("__DESCRIPTION__", escaped[path.suffix])
         path.write_text(text, encoding="utf-8")
 PY
 cp "$root/LICENSE" "$dest/LICENSE"

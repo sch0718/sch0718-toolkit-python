@@ -68,7 +68,7 @@ scripts/verify.sh
    git tag http-utils-v0.2.0 && git push origin http-utils-v0.2.0
    ```
 
-3. [발행 워크플로](.github/workflows/publish.yml)가 태그와 `pyproject.toml` 버전을 대조합니다. 다음으로 검사·빌드를 거쳐 PyPI **trusted publishing**(OIDC)으로 발행합니다. PyPI 토큰은 저장소에 두지 않습니다.
+3. [발행 워크플로](.github/workflows/publish.yml)가 태그 커밋이 main에 있는지, 태그와 `pyproject.toml` 버전이 같은지 확인합니다. 다음으로 검사를 거쳐 그 패키지 하나만 빌드하고, `pypi` 환경 승인 뒤 PyPI **trusted publishing**(OIDC)으로 발행합니다. PyPI 토큰은 저장소에 두지 않습니다.
 
 이미 발행한 버전은 덮어쓸 수 없습니다. 문제가 있으면 고친 버전을 새로 내고 PyPI에서 그 버전을 yank합니다.
 
@@ -78,7 +78,7 @@ PyPI는 프로젝트가 생기기 전에 "pending publisher"를 등록해 두면
 
 1. PyPI 계정과 2FA를 준비합니다.
 2. PyPI 계정 메뉴 → Publishing에서 pending publisher를 추가합니다. 값은 PyPI 프로젝트 이름 `sch0718-<이름>`, 소유자 `sch0718`, 저장소 `sch0718-toolkit-python`, 워크플로 `publish.yml`, 환경 `pypi`입니다.
-3. GitHub 저장소 Settings → Environments에 `pypi` 환경을 만듭니다. 태그 규칙이나 승인자를 걸어 두면 실수로 발행하는 것을 막을 수 있습니다.
+3. GitHub 저장소 Settings → Environments에 `pypi` 환경을 만들고 **보호 규칙을 반드시 겁니다.** Required reviewers에 본인을 넣어 발행마다 승인하게 하고, Deployment branches and tags를 태그 `*-v*`로 제한합니다. 저장소 Rulesets로 `*-v*` 태그를 만들 수 있는 사람도 소유자로 제한합니다. 워크플로도 태그 커밋이 main에 병합된 것인지 검사하지만, 환경 승인이 마지막 안전장치입니다. 출처: [PyPI Trusted Publishers 보안 모델](https://docs.pypi.org/trusted-publishers/security-model/)(2026-10-27 확인)
 4. 위 「릴리스」대로 태그를 push합니다.
 
 출처: [Creating a PyPI project with a Trusted Publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/) (2026-10-27 확인)
