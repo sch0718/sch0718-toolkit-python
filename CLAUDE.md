@@ -6,4 +6,4 @@
 - 새 패키지는 `scripts/new-package.sh`로 만듭니다. 템플릿을 고치면 시험용 패키지를 만들어 `scripts/verify.sh`가 통과하는지 확인하고 지웁니다.
 - 끝내기 전에 `uv sync --all-packages && scripts/verify.sh`를 돌립니다.
 - main에 직접 커밋하지 않고 브랜치·PR로 작업합니다.
-- 비밀값(PyPI 토큰, 키)을 저장소에 넣지 않습니다. 발행은 trusted publishing으로만 합니다.
+- 비밀값(토큰, 키)을 저장소에 넣지 않습니다. 릴리스는 태그와 릴리스 워크플로로만 내고, 낸 태그는 옮기거나 지우지 않습니다.
