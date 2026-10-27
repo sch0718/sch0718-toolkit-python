@@ -1,0 +1,9 @@
+# sch0718-toolkit-python 작업 규칙
+
+- 사용자에게 보이는 답·문서·커밋 메시지는 한국어로 씁니다.
+- 무엇을 넣을지는 README의 「넣는 기준」을 따릅니다. 서비스 하나의 사정만으로 패키지 API를 바꾸지 않습니다.
+- 새로 만들기 전에 같은 일을 하는 널리 쓰는 라이브러리(GitHub 별이 많고 업계에서 쓰는 것)가 있는지 먼저 찾습니다. 있으면 가져다 쓰고, 고른 이유와 별 수(확인 날짜)를 README나 패키지 README에 적습니다.
+- 새 패키지는 `scripts/new-package.sh`로 만듭니다. 템플릿을 고치면 시험용 패키지를 만들어 `scripts/verify.sh`가 통과하는지 확인하고 지웁니다.
+- 끝내기 전에 `uv sync --all-packages && scripts/verify.sh`를 돌립니다.
+- main에 직접 커밋하지 않고 브랜치·PR로 작업합니다.
+- 비밀값(PyPI 토큰, 키)을 저장소에 넣지 않습니다. 발행은 trusted publishing으로만 합니다.
